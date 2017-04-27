@@ -4,6 +4,7 @@ import net.unit8.erebus.tryartifact.command.TryArtifactCommandRegister;
 import net.unit8.erebus.tryartifact.tool.TryJShellTool;
 
 import java.io.ByteArrayInputStream;
+import java.util.Locale;
 
 /**
  * @author kawasima
@@ -11,7 +12,7 @@ import java.io.ByteArrayInputStream;
 public class TryArtifact {
     public static void main(String[] args) throws Exception {
         TryJShellTool tool = new TryJShellTool(System.in, System.out, System.err, System.out,
-                new ByteArrayInputStream(new byte[0]), System.out, System.err);
+                new ByteArrayInputStream(new byte[0]), System.out, System.err, Locale.getDefault());
         new TryArtifactCommandRegister().register(tool);
 
         tool.start(args);
