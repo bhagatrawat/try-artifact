@@ -1064,6 +1064,26 @@ public class TryJShellTool {
                         "                    possible fully qualified names based on the content of the specified classpath.\n" +
                         "                    The \"<fix-shortcut>\" is either Alt-F1 or Alt-Enter, depending on the platform.\n",
                 CommandKind.HELP_SUBJECT));
+        registerCommand(new Command("/cls", "",
+                "Clear JShell console.",
+                "It clears JShell Console.",
+                arg -> clearConsole(),
+                TryJShellTool.EMPTY_COMPLETION_PROVIDER));
+    }
+    
+    private boolean clearConsole() {
+        try {
+            if (System.getProperty("os.name").contains("Windows")) {
+                new ProcessBuilder("cmd", "/c", "cls").inheritIO().start().waitFor();
+            } else {
+                System.out.print("\033[H\033[2J");
+                System.out.flush();
+            }
+            return true;
+        } catch (IOException | InterruptedException e) {
+            error("%s", e.getMessage());
+            return false;
+        }
     }
 
     public List<Suggestion> commandCompletionSuggestions(String code, int cursor, int[] anchor) {
