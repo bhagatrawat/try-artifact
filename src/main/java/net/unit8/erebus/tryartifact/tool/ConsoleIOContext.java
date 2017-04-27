@@ -24,7 +24,8 @@ package net.unit8.erebus.tryartifact.tool;
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-
+import jdk.internal.shellsupport.doc.JavadocFormatter;
+import jdk.jshell.SourceCodeAnalysis;
 import jdk.jshell.SourceCodeAnalysis.CompletionInfo;
 import jdk.jshell.SourceCodeAnalysis.QualifiedNames;
 import jdk.jshell.SourceCodeAnalysis.Suggestion;
@@ -48,7 +49,9 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 class ConsoleIOContext extends IOContext {
 
@@ -232,11 +235,19 @@ class ConsoleIOContext extends IOContext {
     private void documentation(TryJShellTool repl) {
         String buffer = in.getCursorBuffer().buffer.toString();
         int cursor = in.getCursorBuffer().cursor;
+        final Terminal term = in.getTerminal();
         String doc;
         if (prefix.isEmpty() && buffer.trim().startsWith("/")) {
             doc = repl.commandDocumentation(buffer, cursor);
         } else {
-            doc = String.valueOf(repl.analysis.documentation(prefix + buffer, cursor + prefix.length(), true));
+            final JavadocFormatter formatter = new JavadocFormatter(term.getWidth(),term.isAnsiSupported());
+            final Function<SourceCodeAnalysis.Documentation, String> convertor =
+                    d -> formatter.formatJavadoc(d.signature(), d.javadoc()) +
+                            (d.javadoc() == null ? repl.messageFormat("jshell.console.no.javadoc"): "");
+            doc = repl.analysis.documentation(prefix + buffer, cursor + prefix.length(), true)
+                    .stream()
+                    .map(convertor)
+                    .collect(Collectors.joining("\t"));
         }
 
         try {
