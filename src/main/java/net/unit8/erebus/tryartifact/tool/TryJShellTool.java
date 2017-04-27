@@ -36,6 +36,7 @@ import net.unit8.erebus.tryartifact.debug.InternalDebugControl;
 import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.file.*;
+import java.text.MessageFormat;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.function.*;
@@ -67,6 +68,9 @@ public class TryJShellTool {
     private static final Pattern HISTORY_ALL_START_FILENAME = Pattern.compile(
             "((?<cmd>(all|history|start))(\\z|\\p{javaWhitespace}+))?(?<filename>.*)");
     private static final String RECORD_SEPARATOR = "\u241E";
+    private static final String RB_NAME_PREFIX  = "jdk.internal.jshell.tool.resources";
+    private static final String L10N_RB_NAME    = RB_NAME_PREFIX + ".l10n";
+    private ResourceBundle outputRB  = null;
 
     final InputStream cmdin;
     final PrintStream cmdout;
@@ -75,7 +79,8 @@ public class TryJShellTool {
     final InputStream userin;
     final PrintStream userout;
     final PrintStream usererr;
-
+    final Locale locale;
+    
     final Feedback feedback = new Feedback();
 
     /**
@@ -91,7 +96,8 @@ public class TryJShellTool {
      */
     public TryJShellTool(InputStream cmdin, PrintStream cmdout, PrintStream cmderr,
                          PrintStream console,
-                         InputStream userin, PrintStream userout, PrintStream usererr) {
+                         InputStream userin, PrintStream userout, PrintStream usererr,
+                         Locale locale) {
         this.cmdin = cmdin;
         this.cmdout = cmdout;
         this.cmderr = cmderr;
@@ -99,6 +105,7 @@ public class TryJShellTool {
         this.userin = userin;
         this.userout = userout;
         this.usererr = usererr;
+        this.locale = locale;
         initializeFeedbackModes();
     }
 
@@ -345,7 +352,7 @@ public class TryJShellTool {
      */
     public static void main(String[] args) throws Exception {
         new TryJShellTool(System.in, System.out, System.err, System.out,
-                new ByteArrayInputStream(new byte[0]), System.out, System.err)
+                new ByteArrayInputStream(new byte[0]), System.out, System.err, Locale.getDefault())
                 .start(args);
     }
 
@@ -2262,5 +2269,39 @@ public class TryJShellTool {
                         return matchesType;
                     }
                 };
+    
+    /**
+     * Format using resource bundle look-up using MessageFormat
+     *
+     * @param key the resource key
+     * @param args
+     */
+    String messageFormat(String key, Object... args) {
+        String rs = getResourceString(key);
+        return MessageFormat.format(rs, args);
+    }
 
+    /**
+     * Resource bundle look-up
+     *
+     * @param key the resource key
+     */
+    String getResourceString(String key) {
+        if (outputRB == null) {
+            try {
+                outputRB = ResourceBundle.getBundle(L10N_RB_NAME, locale);
+            } catch (MissingResourceException mre) {
+                error("Cannot find ResourceBundle: %s for locale: %s", L10N_RB_NAME, locale);
+                return "";
+            }
+        }
+        String s;
+        try {
+            s = outputRB.getString(key);
+        } catch (MissingResourceException mre) {
+            error("Missing resource: %s in %s", key, L10N_RB_NAME);
+            return "";
+        }
+        return s;
+    }
 }
