@@ -32,11 +32,11 @@
                 <version>3.6.1</version>
                 <configuration>
                     <fork>true</fork>
-                    <executable>C:\\development\\tools\\Java\\jdk-9\\bin\\javac</executable>
                     <source>${java.version}</source>
                     <target>${java.version}</target>
                     <compilerArgs>
                         <arg>-XDignore.symbol.file</arg>
+                        <arg>--add-exports=jdk.compiler/jdk.internal.shellsupport.doc=ALL-UNNAMED</arg>     
                     </compilerArgs>
                 </configuration>
             </plugin>
