@@ -31,6 +31,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -236,7 +237,7 @@ public class TryArtifactTesting {
                 new PrintStream(console),
                 userin,
                 new PrintStream(userout),
-                new PrintStream(usererr));
+                new PrintStream(usererr), Locale.getDefault());
         new TryArtifactCommandRegister().register(repl);
         repl.testPrompt = true;
         try {
@@ -441,7 +442,7 @@ public class TryArtifactTesting {
 
     private List<String> computeCompletions(String code, boolean isSmart) {
         TryJShellTool repl = this.repl != null ? this.repl
-                                      : new TryJShellTool(null, null, null, null, null, null, null);
+                                      : new TryJShellTool(null, null, null, null, null, null, null, null);
         if (this.repl == null) {
             new TryArtifactCommandRegister().register(repl);
         }
