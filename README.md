@@ -49,6 +49,7 @@ The `/resolve` command is available in the TryArtifact's JShell.
 |     /!                                                         -- re-run last snippet
 |     /<id>                                                      -- re-run snippet by id
 |     /-<n>                                                      -- re-run n-th previous snippet
+|     /cls                                                       -- Clear JShell console.
 |     /resolve <spec>                                            -- resolve an artifact
 |  
 |  For more information type '/help' followed by the name of command or a subject.
