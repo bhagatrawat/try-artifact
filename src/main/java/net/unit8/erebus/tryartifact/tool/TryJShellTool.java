@@ -38,10 +38,7 @@ import java.nio.charset.Charset;
 import java.nio.file.*;
 import java.util.*;
 import java.util.Map.Entry;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.Predicate;
-import java.util.function.Supplier;
+import java.util.function.*;
 import java.util.prefs.Preferences;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -751,7 +748,7 @@ public class TryJShellTool {
 
             for (String alternative : alternatives) {
                 if (alternative.startsWith(input)) {
-                    result.add(new Suggestion(alternative, false));
+                    result.add(suggestion.apply(alternative, false));
                 }
             }
 
@@ -781,7 +778,7 @@ public class TryJShellTool {
             List<Suggestion> result = new ArrayList<>();
             try (Stream<Path> dir = Files.list(current)) {
                 dir.filter(f -> accept.test(f) && f.getFileName().toString().startsWith(prefix))
-                        .map(f -> new Suggestion(f.getFileName() + (Files.isDirectory(f) ? "/" : ""), false))
+                        .map(f -> suggestion.apply(f.getFileName() + (Files.isDirectory(f) ? "/" : ""), false))
                         .forEach(result::add);
             } catch (IOException ex) {
                 //ignore...
@@ -789,7 +786,7 @@ public class TryJShellTool {
             if (path.isEmpty()) {
                 StreamSupport.stream(FileSystems.getDefault().getRootDirectories().spliterator(), false)
                         .filter(root -> accept.test(root) && root.toString().startsWith(prefix))
-                        .map(root -> new Suggestion(root.toString(), false))
+                        .map(root -> suggestion.apply(root.toString(), false))
                         .forEach(result::add);
             }
             anchor[0] = path.length();
@@ -807,12 +804,11 @@ public class TryJShellTool {
         return (prefix, cursor, anchor) -> {
             anchor[0] = 0;
             return state.snippets()
-                    .stream()
                     .flatMap(k -> (k instanceof DeclarationSnippet)
                             ? Stream.of(String.valueOf(k.id()), ((DeclarationSnippet) k).name())
                             : Stream.of(String.valueOf(k.id())))
                     .filter(k -> k.startsWith(prefix))
-                    .map(k -> new Suggestion(k, false))
+                    .map(k -> suggestion.apply(k, false))
                     .collect(Collectors.toList());
         };
     }
@@ -1082,7 +1078,7 @@ public class TryJShellTool {
                     .filter(cmd -> cmd.kind.shouldSuggestCompletions)
                     .map(cmd -> cmd.command)
                     .filter(key -> key.startsWith(prefix))
-                    .map(key -> new Suggestion(key + " ", false));
+                    .map(key -> suggestion.apply(key + " ", false));
             anchor[0] = 0;
         } else {
             String arg = prefix.substring(space + 1);
@@ -1426,7 +1422,7 @@ public class TryJShellTool {
      * @return a Stream of referenced snippets or null if no matches to specific arg
      */
     private Stream<Snippet> argToSnippets(String arg, boolean allowAll) {
-        List<Snippet> snippets = state.snippets();
+        List<Snippet> snippets = state.snippets().collect(toList());
         if (allowAll && arg.equals("all")) {
             // all snippets including start-up, failed, and overwritten
             return snippets.stream();
@@ -1715,7 +1711,7 @@ public class TryJShellTool {
     }
 
     private boolean cmdVars() {
-        for (VarSnippet vk : state.variables()) {
+        for (VarSnippet vk : state.variables().collect(toList())) {
             String val = state.status(vk) == Status.VALID
                     ? state.varValue(vk)
                     : "(not-active)";
@@ -1725,14 +1721,14 @@ public class TryJShellTool {
     }
 
     private boolean cmdMethods() {
-        for (MethodSnippet mk : state.methods()) {
+        for (MethodSnippet mk : state.methods().collect(toList())) {
             hard("  %s %s", mk.name(), mk.signature());
         }
         return true;
     }
 
     private boolean cmdClasses() {
-        for (TypeDeclSnippet ck : state.types()) {
+        for (TypeDeclSnippet ck : state.types().collect(toList())) {
             String kind;
             switch (ck.subKind()) {
                 case INTERFACE_SUBKIND:
@@ -1765,7 +1761,7 @@ public class TryJShellTool {
     }
 
     private boolean cmdUseHistoryEntry(int index) {
-        List<Snippet> keys = state.snippets();
+        List<Snippet> keys = state.snippets().collect(toList());
         if (index < 0)
             index += keys.size();
         else
@@ -1780,7 +1776,7 @@ public class TryJShellTool {
     }
 
     private boolean rerunHistoryEntryById(String id) {
-        Optional<Snippet> snippet = state.snippets().stream()
+        Optional<Snippet> snippet = state.snippets()
                 .filter(s -> s.id().equals(id))
                 .findFirst();
         return snippet.map(s -> {
@@ -1916,7 +1912,7 @@ public class TryJShellTool {
             debug("Event with null key: %s", ste);
             return false;
         }
-        List<Diag> diagnostics = state.diagnostics(sn);
+        List<Diag> diagnostics = state.diagnostics(sn).collect(toList());
         String source = sn.source();
         if (ste.causeSnippet() == null) {
             // main event
@@ -2112,10 +2108,10 @@ public class TryJShellTool {
     //where
     void printUnresolved(UnresolvedReferenceException ex) {
         DeclarationSnippet corralled = ex.getSnippet();
-        List<Diag> otherErrors = errorsOnly(state.diagnostics(corralled));
+        List<Diag> otherErrors = errorsOnly(state.diagnostics(corralled).collect(toList()));
         StringBuilder sb = new StringBuilder();
         if (otherErrors.size() > 0) {
-            if (state.unresolvedDependencies(corralled).size() > 0) {
+            if (state.unresolvedDependencies(corralled).count() > 0) {
                 sb.append(" and");
             }
             if (otherErrors.size() == 1) {
@@ -2149,7 +2145,7 @@ public class TryJShellTool {
 
     //where
     String unresolved(DeclarationSnippet key) {
-        List<String> unr = state.unresolvedDependencies(key);
+        List<String> unr = state.unresolvedDependencies(key).collect(toList());
         StringBuilder sb = new StringBuilder();
         int fromLast = unr.size();
         if (fromLast > 0) {
@@ -2232,4 +2228,19 @@ public class TryJShellTool {
             this.tid = tid;
         }
     }
+
+    public static final BiFunction<String, Boolean, Suggestion> suggestion =
+            (continuation, matchesType) ->
+                new Suggestion() {
+                    @Override
+                    public String continuation() {
+                        return continuation;
+                    }
+
+                    @Override
+                    public boolean matchesType() {
+                        return matchesType;
+                    }
+                };
+
 }

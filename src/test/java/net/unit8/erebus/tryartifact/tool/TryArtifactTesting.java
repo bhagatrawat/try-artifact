@@ -451,8 +451,8 @@ public class TryArtifactTesting {
         List<SourceCodeAnalysis.Suggestion> completions =
                 repl.commandCompletionSuggestions(code, cursor, new int[1]); //XXX: ignoring anchor for now
         return completions.stream()
-                          .filter(s -> isSmart == s.isSmart)
-                          .map(s -> s.continuation)
+                          .filter(s -> isSmart == s.matchesType())
+                          .map(s -> s.continuation())
                           .distinct()
                           .collect(Collectors.toList());
     }

@@ -53,7 +53,7 @@ public class TryArtifactCommandRegister {
                     try {
                         List<Artifact> artifacts = searcher.searchIncremental(code);
                         artifacts.stream()
-                                .map(a -> new SourceCodeAnalysis.Suggestion(a.toString(), false))
+                                .map(a -> TryJShellTool.suggestion.apply(a.toString(), false))
                                 .forEach(results::add);
                         anchor[0] = 0; // code.length();
                     } catch (IOException | IllegalArgumentException ignore) {
