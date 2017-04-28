@@ -1,7 +1,7 @@
 # Try artifact
 TryArtifact is a tool for testing a maven artifacts in the JShell.
 
-##Usage
+## Usage
 Download from https://github.com/bhagatsingh/try-artifact/releases/tag/v0.2.1
 
 Start TryArtifact's JShell.
