@@ -31,6 +31,7 @@ import jdk.jshell.Snippet.Status;
 import jdk.jshell.Snippet.SubKind;
 import jdk.jshell.SourceCodeAnalysis.CompletionInfo;
 import jdk.jshell.SourceCodeAnalysis.Suggestion;
+import jline.TerminalFactory;
 import net.unit8.erebus.tryartifact.debug.InternalDebugControl;
 
 import java.io.*;
@@ -1080,7 +1081,7 @@ public class TryJShellTool {
     
     private boolean clearConsole() {
         try {
-            if (System.getProperty("os.name").contains("Windows")) {
+            if (System.getProperty("os.name").toLowerCase(Locale.US).contains(TerminalFactory.WINDOWS)) {
                 new ProcessBuilder("cmd", "/c", "cls").inheritIO().start().waitFor();
             } else {
                 System.out.print("\033[H\033[2J");
