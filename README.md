@@ -1,15 +1,10 @@
 # Try artifact
 TryArtifact is a tool for testing a maven artifacts in the JShell.
 
-# Build
-- Clone https://github.com/bhagatsingh/try-artifact.git
-- Download latest version of Jdk 9 and update JAVA_HOME for Jdk-9
-```
-- mvn clean install (if you see any issue with test cases then skip them by adding  -Dmaven.test.skip=true)
-```
+##Usage
+Download from https://github.com/bhagatsingh/try-artifact/releases/tag/v0.2.1
 
-# Start TryArtifact's JShell.
-- cd target directory
+Start TryArtifact's JShell.
 ```
 $java -jar try-artifact-0.2.1.jar
 ```
